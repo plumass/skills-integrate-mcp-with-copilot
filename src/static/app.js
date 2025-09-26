@@ -3,28 +3,86 @@ document.addEventListener("DOMContentLoaded", () => {
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
+  const searchInput = document.getElementById("search-input");
+  const sortSelect = document.getElementById("sort-select");
+  const availableOnlyCheckbox = document.getElementById("available-only");
+  const daySelect = document.getElementById("day-select");
+
+  let allActivities = {};
 
   // Function to fetch activities from API
   async function fetchActivities() {
     try {
       const response = await fetch("/activities");
-      const activities = await response.json();
+      allActivities = await response.json();
+      renderActivities();
+    } catch (error) {
+      activitiesList.innerHTML =
+        "<p>Failed to load activities. Please try again later.</p>";
+      console.error("Error fetching activities:", error);
+    }
+  }
 
-      // Clear loading message
-      activitiesList.innerHTML = "";
+  // Function to render activities with filters and sorting
+  function renderActivities() {
+    // Get filter/sort values
+    const search = searchInput.value.trim().toLowerCase();
+    const sort = sortSelect.value;
+    const availableOnly = availableOnlyCheckbox.checked;
+    const selectedDay = daySelect.value;
 
-      // Populate activities list
-      Object.entries(activities).forEach(([name, details]) => {
-        const activityCard = document.createElement("div");
-        activityCard.className = "activity-card";
+    // Helper to check if activity occurs on selected day
+    function occursOnDay(schedule, day) {
+      if (!day) return true;
+      // Examples of schedule: "Fridays, 3:30 PM - 5:00 PM", "Mondays, Wednesdays, Fridays, 2:00 PM - 3:00 PM"
+      // Simplified detection by searching for the day in the string
+      return schedule.toLowerCase().includes(day.toLowerCase());
+    }
 
-        const spotsLeft =
-          details.max_participants - details.participants.length;
+    // Filter
+    let filtered = Object.entries(allActivities).filter(([name, details]) => {
+      let match = true;
+      if (search) {
+        match = name.toLowerCase().includes(search) || details.description.toLowerCase().includes(search);
+      }
+      if (availableOnly) {
+        const spotsLeft = details.max_participants - details.participants.length;
+        match = match && spotsLeft > 0;
+      }
+      if (selectedDay) {
+        match = match && occursOnDay(details.schedule, selectedDay);
+      }
+      return match;
+    });
 
-        // Create participants HTML with delete icons instead of bullet points
-        const participantsHTML =
-          details.participants.length > 0
-            ? `<div class="participants-section">
+    // Sort
+    if (sort === "name") {
+      filtered.sort((a, b) => a[0].localeCompare(b[0]));
+    } else if (sort === "spots") {
+      filtered.sort((a, b) => (b[1].max_participants - b[1].participants.length) - (a[1].max_participants - a[1].participants.length));
+    } else if (sort === "participants") {
+      filtered.sort((a, b) => b[1].participants.length - a[1].participants.length);
+    }
+
+    // Clear previous list and dropdown
+    activitiesList.innerHTML = "";
+    activitySelect.innerHTML = "";
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "-- Select an activity --";
+    activitySelect.appendChild(defaultOption);
+
+    // Populate activities list
+    filtered.forEach(([name, details]) => {
+      const activityCard = document.createElement("div");
+      activityCard.className = "activity-card";
+
+      const spotsLeft = details.max_participants - details.participants.length;
+
+      // Create participants HTML with delete icons instead of bullet points
+      const participantsHTML =
+        details.participants.length > 0
+          ? `<div class="participants-section">
               <h5>Participants:</h5>
               <ul class="participants-list">
                 ${details.participants
@@ -35,37 +93,38 @@ document.addEventListener("DOMContentLoaded", () => {
                   .join("")}
               </ul>
             </div>`
-            : `<p><em>No participants yet</em></p>`;
+          : `<p><em>No participants yet</em></p>`;
 
-        activityCard.innerHTML = `
-          <h4>${name}</h4>
-          <p>${details.description}</p>
-          <p><strong>Schedule:</strong> ${details.schedule}</p>
-          <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
-          <div class="participants-container">
-            ${participantsHTML}
-          </div>
-        `;
+      activityCard.innerHTML = `
+        <h4>${name}</h4>
+        <p>${details.description}</p>
+        <p><strong>Schedule:</strong> ${details.schedule}</p>
+        <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+        <div class="participants-container">
+          ${participantsHTML}
+        </div>
+      `;
 
-        activitiesList.appendChild(activityCard);
+      activitiesList.appendChild(activityCard);
 
-        // Add option to select dropdown
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        activitySelect.appendChild(option);
-      });
+      // Add option to select dropdown
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      activitySelect.appendChild(option);
+    });
 
-      // Add event listeners to delete buttons
-      document.querySelectorAll(".delete-btn").forEach((button) => {
-        button.addEventListener("click", handleUnregister);
-      });
-    } catch (error) {
-      activitiesList.innerHTML =
-        "<p>Failed to load activities. Please try again later.</p>";
-      console.error("Error fetching activities:", error);
-    }
+    // Add event listeners to delete buttons
+    document.querySelectorAll(".delete-btn").forEach((button) => {
+      button.addEventListener("click", handleUnregister);
+    });
   }
+
+  // Event listeners for filters and sort
+  searchInput.addEventListener("input", renderActivities);
+  sortSelect.addEventListener("change", renderActivities);
+  availableOnlyCheckbox.addEventListener("change", renderActivities);
+  daySelect.addEventListener("change", renderActivities);
 
   // Handle unregister functionality
   async function handleUnregister(event) {
