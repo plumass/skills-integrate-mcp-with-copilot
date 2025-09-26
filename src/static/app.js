@@ -34,9 +34,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Helper to check if activity occurs on selected day
     function occursOnDay(schedule, day) {
       if (!day) return true;
-      // Exemples de schedule: "Fridays, 3:30 PM - 5:00 PM", "Mondays, Wednesdays, Fridays, 2:00 PM - 3:00 PM"
+      // Examples of schedule: "Fridays, 3:30 PM - 5:00 PM", "Mondays, Wednesdays, Fridays, 2:00 PM - 3:00 PM"
       const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-      // On simplifie la détection en cherchant le jour dans la chaîne
+      // Simplified detection by searching for the day in the string
       return schedule.toLowerCase().includes(day.toLowerCase());
     }
 
