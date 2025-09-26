@@ -35,7 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
     function occursOnDay(schedule, day) {
       if (!day) return true;
       // Examples of schedule: "Fridays, 3:30 PM - 5:00 PM", "Mondays, Wednesdays, Fridays, 2:00 PM - 3:00 PM"
-      const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
       // Simplified detection by searching for the day in the string
       return schedule.toLowerCase().includes(day.toLowerCase());
     }
