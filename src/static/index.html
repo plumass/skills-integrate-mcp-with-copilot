@@ -15,6 +15,24 @@
     <main>
       <section id="activities-container">
         <h3>Available Activities</h3>
+        <div id="filters-toolbar">
+          <input type="text" id="search-input" placeholder="Search by name or description" />
+          <select id="sort-select">
+            <option value="">Sort by...</option>
+            <option value="name">Name</option>
+            <option value="spots">Availability</option>
+            <option value="participants">Participants</option>
+          </select>
+          <select id="day-select">
+            <option value="">All days</option>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+          </select>
+          <label><input type="checkbox" id="available-only" /> Only show available</label>
+        </div>
         <div id="activities-list">
           <!-- Activities will be loaded here -->
           <p>Loading activities...</p>
